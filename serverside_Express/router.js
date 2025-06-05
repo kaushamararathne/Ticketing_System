@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { Client, Employee, Ticket, TBody } = require('./models');
+const { User, Ticket, TBody } = require('./models');
 
 /** ======================
  * Client APIs
