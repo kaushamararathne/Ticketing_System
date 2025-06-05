@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import axios from "axios";
 
+const config = {
+  headers: {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+};
 
 const Addnewuser = () => {
   const [formData, setFormData] = useState({
@@ -9,7 +15,7 @@ const Addnewuser = () => {
     email: "",
     password: "",
     empType: "ADMIN" // default
-  });
+  },config);
 
   const [message, setMessage] = useState("");
 
@@ -24,7 +30,7 @@ const Addnewuser = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post("http://localhost:5000/users/add", formData);
+      const response = await axios.post("http://localhost:5000/admin/add", formData);
       setMessage(response.data.message);
     } catch (error) {
       setMessage(error.response?.data?.error || "Error registering user");

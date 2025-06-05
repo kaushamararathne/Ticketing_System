@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const authenticateToken = require('./middleware/auth');
 
 const { User } = require('./models');
 
@@ -21,12 +22,14 @@ mongoose.connect(DB_URI)
 // Middleware
 app.use(bodyParser.json());
 
+const SECRET_KEY = "my_super_secret_key_123!";
+
 // Use the routes
 const ticketroutes= require('./routes/client');
 const admin = require('./routes/admin');
 
-app.use('/tickets', ticketroutes); 
-app.use('/admin', admin);
+app.use('/tickets',authenticateToken, ticketroutes); 
+app.use('/admin',authenticateToken, admin);
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
@@ -36,11 +39,20 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
     const token = jwt.sign(
-      { id: user._id, role: user.role },
-      "0760823879",
-      { expiresIn: "1h" }
-    );
-    res.json({ token });
+  {
+    id: user._id,
+    fname: user.name,
+    lname: user.lname,
+    email: user.email,
+    role: user.empType
+  },
+  SECRET_KEY,
+  { expiresIn: "1h" }
+);
+
+    res.json({         
+          token: token
+});
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

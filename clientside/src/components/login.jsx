@@ -1,47 +1,49 @@
-// src/App.js
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // adjust path if needed
 
 function Login() {
-  
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLogin, setIsLogin] = useState(true); // Toggle between login and register
-  const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const { setToken } = useAuth(); // Get token setter from context
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-
-    const endpoint = isLogin ? '/login' : '/register';
     try {
-      const res = await axios.post(endpoint, { username, password });
-      setMessage(res.data.message);
+      const response = await axios.post('http://localhost:5000/login', {
+        email,
+        password
+      });
+
+      const token = response.data.token;
+      localStorage.setItem('token', token);
+      setToken(token); // Automatically decodes & sets user via AuthContext
+
+      const role = response.data.role || JSON.parse(atob(token.split('.')[1])).role;
+
+      // Role-based routing
+      if (role === 'ADMIN') navigate('/admin');
+      else if (role === 'SUPERVISOR') navigate('/supervisor');
+      else if (role === 'L1ENGINEER') navigate('/l1engineer');
+      else if (role === 'L2L3ENGINEER') navigate('/l2l3engineer');
+      else navigate('/');
+
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Error occurred.');
+      alert("Login failed! " + (err.response?.data?.message || err.message));
     }
   };
 
-  return (    
-      <div style={{ padding: 'auto' }}>
-        <h2>{isLogin ? 'Login' : 'Register'}</h2>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          /><br/><br/>
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          /><br/><br/>
-          <button type="submit">{isLogin ? 'Login' : 'Register'}</button>
-        </form>
-        {message && <p>{message}</p>}
+  return (
+    <div>
+      <h2>Login</h2>
+      <form onSubmit={handleLogin}>
+        <input type="email" placeholder="Email" onChange={e => setEmail(e.target.value)} required />
+        <input type="text" placeholder="Password" onChange={e => setPassword(e.target.value)} required />
+        <button type="submit">Login</button>
+      </form>
     </div>
   );
 }
